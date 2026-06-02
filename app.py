@@ -1,8 +1,6 @@
 import streamlit as st
 import os
-from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
-from langchain_community.vectorstores import FAISS
-from langchain_core.documents import Document
+from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -26,24 +24,22 @@ st.title("🌊 Asistente de Seguridad: Inundaciones")
 
 @st.cache_resource
 def inicializar_bot():
-    docs = [Document(page_content=informacion_conocimiento)]
-    vectorstore = FAISS.from_documents(docs, GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
-    retriever = vectorstore.as_retriever()
     llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
     
     prompt_template = ChatPromptTemplate.from_template("""
     Eres un asistente especializado en seguridad ante inundaciones en Zapopan.
-    CONTEXTO: {context}
+    
+    Aqui esta la informacion que debes usar para responder:
+    {context}
+    
     PREGUNTA: {input}
-    Responde de manera clara y util basandote en el contexto.
+    
+    Responde de manera clara, util y calmada. Si la pregunta no esta relacionada con seguridad o inundaciones, indicalo amablemente.
     RESPUESTA:
     """)
     
-    def format_docs(docs):
-        return "\n\n".join(doc.page_content for doc in docs)
-    
     rag_chain = (
-        {"context": retriever | format_docs, "input": RunnablePassthrough()}
+        {"context": RunnablePassthrough(), "input": RunnablePassthrough()}
         | prompt_template
         | llm
         | StrOutputParser()
@@ -63,8 +59,12 @@ if prompt := st.chat_input("¿Que duda tienes sobre seguridad o inundaciones?"):
     st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
+
     with st.chat_message("assistant"):
         with st.spinner("Consultando..."):
-            respuesta = qa_chain.invoke(prompt)
+            respuesta = qa_chain.invoke({
+                "input": prompt,
+                "context": informacion_conocimiento
+            })
             st.markdown(respuesta)
     st.session_state.messages.append({"role": "assistant", "content": respuesta})
