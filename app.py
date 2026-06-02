@@ -3,9 +3,7 @@ import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import CharacterTextSplitter
-from langchain.docstore.document import Document
-from langchain.chains import RetrievalQA
-
+from langchain.chains import create_retrieval_chain
 # --- CONFIGURACIÓN ---
 # Si usas Streamlit Cloud, configura la clave en Settings > Secrets
 os.environ["OPENAI_API_KEY"] = "TU_API_KEY_AQUI"
