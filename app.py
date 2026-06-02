@@ -4,7 +4,7 @@ import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
 from langchain_text_splitters import CharacterTextSplitter
-from langchain.docstore.document import Document
+from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
 # CONFIGURACIÓN
