@@ -4,3 +4,5 @@ langchain-openai
 langchain-community
 chromadb
 openai
+langchain-text-splitters
+
