@@ -2,9 +2,7 @@ import streamlit as st
 import os
 from langchain_openai import OpenAIEmbeddings, ChatOpenAI
 from langchain_community.vectorstores import Chroma
-from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.documents import Document
-from langchain.chains.combine_documents import create_stuff_documents_chain
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
@@ -30,11 +28,10 @@ st.title("🌊 Asistente de Seguridad: Inundaciones")
 
 @st.cache_resource
 def inicializar_bot():
+    # Creamos el documento directamente sin splitter para evitar más imports
     docs = [Document(page_content=informacion_conocimiento)]
-    text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
-    docs_divididos = text_splitter.split_documents(docs)
     
-    vectorstore = Chroma.from_documents(docs_divididos, OpenAIEmbeddings())
+    vectorstore = Chroma.from_documents(docs, OpenAIEmbeddings())
     retriever = vectorstore.as_retriever()
     
     llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
@@ -56,7 +53,6 @@ def inicializar_bot():
     RESPUESTA:
     """)
     
-    # Creamos la cadena de forma simple sin usar create_retrieval_chain
     def format_docs(docs):
         return "\n\n".join(doc.page_content for doc in docs)
     
