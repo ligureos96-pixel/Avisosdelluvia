@@ -7,8 +7,12 @@ from langchain_text_splitters import CharacterTextSplitter
 from langchain_core.documents import Document
 from langchain.chains import RetrievalQA
 
-# CONFIGURACIÓN
-os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+# CONFIGURACIÓN SEGURA
+if "OPENAI_API_KEY" in st.secrets:
+    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+else:
+    st.error("Error: No se encontró la API KEY en los Secrets.")
+    st.stop()
 
 st.set_page_config(
     page_title="Bot de Seguridad",
@@ -40,14 +44,8 @@ st.sidebar.text("""
 
 @st.cache_resource
 def inicializar_bot():
-
     docs = [Document(page_content=informacion_conocimiento)]
-
-    text_splitter = CharacterTextSplitter(
-        chunk_size=500,
-        chunk_overlap=0
-    )
-
+    text_splitter = CharacterTextSplitter(chunk_size=500, chunk_overlap=0)
     docs_divididos = text_splitter.split_documents(docs)
 
     vectorstore = Chroma.from_documents(
@@ -60,11 +58,16 @@ def inicializar_bot():
         chain_type="stuff",
         retriever=vectorstore.as_retriever()
     )
-
     return qa
 
-qa = inicializar_bot()
+# Inicializar bot
+try:
+    qa = inicializar_bot()
+except Exception as e:
+    st.error(f"Error al inicializar el bot: {e}")
+    st.stop()
 
+# HISTORIAL DE CHAT
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
@@ -72,25 +75,16 @@ for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-prompt = st.chat_input("¿Qué duda tienes sobre seguridad?")
-
-if prompt:
-
-    st.session_state.messages.append(
-        {"role": "user", "content": prompt}
-    )
-
+# CHAT INPUT
+if prompt := st.chat_input("¿Qué duda tienes sobre seguridad?"):
+    st.session_state.messages.append({"role": "user", "content": prompt})
     with st.chat_message("user"):
         st.markdown(prompt)
 
     with st.chat_message("assistant"):
-
         resultado = qa.invoke({"query": prompt})
-
         respuesta = resultado["result"]
-
         st.markdown(respuesta)
 
-    st.session_state.messages.append(
-        {"role": "assistant", "content": respuesta}
-    )
+    st.session_state.messages.append({"role": "assistant", "content": respuesta})
+
