@@ -1,14 +1,14 @@
 import streamlit as st
 import os
-from langchain_openai import OpenAIEmbeddings, ChatOpenAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 from langchain_community.vectorstores import FAISS
 from langchain_core.documents import Document
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.runnables import RunnablePassthrough
 
-if "OPENAI_API_KEY" in st.secrets:
-    os.environ["OPENAI_API_KEY"] = st.secrets["OPENAI_API_KEY"]
+if "GOOGLE_API_KEY" in st.secrets:
+    os.environ["GOOGLE_API_KEY"] = st.secrets["GOOGLE_API_KEY"]
 
 st.set_page_config(page_title="Bot de Seguridad", page_icon="🌊")
 
@@ -27,9 +27,9 @@ st.title("🌊 Asistente de Seguridad: Inundaciones")
 @st.cache_resource
 def inicializar_bot():
     docs = [Document(page_content=informacion_conocimiento)]
-    vectorstore = FAISS.from_documents(docs, OpenAIEmbeddings())
+    vectorstore = FAISS.from_documents(docs, GoogleGenerativeAIEmbeddings(model="models/embedding-001"))
     retriever = vectorstore.as_retriever()
-    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0.3)
+    llm = ChatGoogleGenerativeAI(model="gemini-2.0-flash", temperature=0.3)
     
     prompt_template = ChatPromptTemplate.from_template("""
     Eres un asistente especializado en seguridad ante inundaciones en Zapopan.
